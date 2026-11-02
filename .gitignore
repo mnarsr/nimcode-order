@@ -1,0 +1,6 @@
+# Zips und Build-Reste
+*.zip
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
