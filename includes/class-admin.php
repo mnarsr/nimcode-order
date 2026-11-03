@@ -118,6 +118,9 @@ class NC_Admin {
 			update_option( 'nc_slot', in_array( $slot, [ 10, 15, 20, 30, 60 ], true ) ? $slot : 15 );
 			update_option( 'nc_card', empty( $p['card'] ) ? 0 : 1 );
 			update_option( 'nc_paused', empty( $p['paused'] ) ? 0 : 1 );
+			update_option( 'nc_watch_on', empty( $p['watch_on'] ) ? 0 : 1 );
+			update_option( 'nc_watch_email', is_email( $p['watch_email'] ?? '' ) ? sanitize_email( $p['watch_email'] ) : '' );
+			update_option( 'nc_watch_min', max( 2, min( 60, absint( $p['watch_min'] ?? 5 ) ) ) );
 			update_option( 'nc_paused_msg', mb_substr( sanitize_textarea_field( (string) ( $p['paused_msg'] ?? '' ) ), 0, 300 ) );
 			update_option( 'nc_price_mode', ( $p['price_mode'] ?? '' ) === 'split' ? 'split' : 'wc' );
 			foreach ( [ 'name', 'street', 'zip', 'city', 'phone' ] as $f ) {
@@ -526,6 +529,20 @@ class NC_Admin {
 			<label><input type="checkbox" name="paused" value="1" <?php checked( get_option( 'nc_paused', 0 ), 1 ); ?>> <strong>Bestellungen pausieren</strong> (z. B. bei Überlastung oder Ruhetag)</label>
 			<p class="desc">Solange aktiv, kann niemand bestellen, unabhängig von den Öffnungszeiten. Das lässt sich auch in der Windows-Kassen-App (Einstellungen) ein- und ausschalten.</p>
 			<p><label><strong>Nachricht für Gäste</strong><br><textarea name="paused_msg" rows="2" class="large-text" maxlength="300" placeholder="<?php echo esc_attr( NC_Hours::DEFAULT_PAUSE_MSG ); ?>"><?php echo esc_textarea( (string) get_option( 'nc_paused_msg', '' ) ); ?></textarea></label><span class="desc">Leer lassen = Standardtext.</span></p>
+		</div>
+		<div class="nc-card">
+			<h2>Kassen-Überwachung</h2>
+			<?php if ( ! empty( $_GET['mailtest'] ) ) : ?>
+				<div class="notice notice-<?php echo $_GET['mailtest'] === 'ok' ? 'success' : 'error'; ?> inline"><p><?php echo $_GET['mailtest'] === 'ok' ? 'Test-E-Mail wurde an WordPress zum Versand übergeben. Bitte im Postfach prüfen (auch Spam).' : 'Der E-Mail-Versand ist fehlgeschlagen. Bitte SMTP einrichten (z. B. WP Mail SMTP).'; ?></p></div>
+			<?php endif; ?>
+			<p class="desc">Schickt dem Inhaber eine E-Mail, wenn die Kassen-App zu den Öffnungszeiten nicht verbunden ist oder eine Bestellung nicht bei der Kasse ankommt.</p>
+			<label><input type="checkbox" name="watch_on" value="1" <?php checked( get_option( 'nc_watch_on', 1 ), 1 ); ?>> <strong>Überwachung aktiv</strong></label>
+			<table class="form-table" role="presentation">
+				<tr><th>E-Mail des Inhabers</th><td><input type="email" name="watch_email" class="regular-text" value="<?php echo esc_attr( (string) get_option( 'nc_watch_email', '' ) ); ?>" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>"><p class="desc">Leer = Administrator-E-Mail.</p></td></tr>
+				<tr><th>Warnen nach (Minuten)</th><td><input type="number" name="watch_min" min="2" max="60" value="<?php echo (int) NC_Watch::minutes(); ?>" style="width:80px"><p class="desc">So lange darf die Kasse offline sein bzw. eine Bestellung unbestätigt bleiben.</p></td></tr>
+			</table>
+			<p><a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=nc_watch_test' ), 'nc_watch_test' ) ); ?>">Test-E-Mail senden</a></p>
+			<p class="desc"><strong>Zuverlässigkeit:</strong> Die Prüfung läuft über WP-Cron und startet nur, wenn die Website aufgerufen wird. Für Sicherheit besser einen echten Cron-Job beim Hoster einrichten (jede Minute): <code>wget -q -O - "<?php echo esc_html( site_url( '/wp-cron.php?doing_wp_cron' ) ); ?>"</code> und in der wp-config.php <code>define('DISABLE_WP_CRON', true);</code> setzen.</p>
 		</div>
 		<?php
 	}

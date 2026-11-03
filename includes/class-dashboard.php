@@ -191,7 +191,9 @@ class NC_Dashboard {
 
 		echo '<div class="wrap nc-dash">';
 		self::styles();
-		echo '<h1>Bestellungen</h1><div class="nc-range">';
+		echo '<h1>Bestellungen</h1>';
+		NC_Watch::banner();
+		echo '<div class="nc-range">';
 		foreach ( [ 'today' => 'Heute', '7' => '7 Tage', '30' => '30 Tage', '90' => '90 Tage' ] as $k => $l ) {
 			printf( '<a href="%s" class="%s">%s</a>', esc_url( self::url( [ 'range' => $k ] ) ), $range === $k ? 'on' : '', esc_html( $l ) );
 		}
